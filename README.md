@@ -1,4 +1,4 @@
-# GreenHouse
+# GreenHouse \n
 All about Hardware setting:
 1.check all IO pin setting by command "gpio readall"
 2.check if I2C is successfully connected by command "i2cdetect y -1"
