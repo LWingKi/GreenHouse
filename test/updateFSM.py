@@ -73,10 +73,10 @@ def state000():
     luminosity = bus.read_i2c_block_data(0x23,0x11)
     lux = float(luminosity[1] + (256 * luminosity[0])) / 1.2
     #dirt
-    bus.write_i2c_block_data(0x44, 0x2C, [0x06])
-    data = bus.read_i2c_block_data(0x44, 0x00, 6)
-    sTemp = ((((data[0] * 256.0) + data[1]) * 175) / 65535.0) - 45
-    sHumid = 100 * (data[3] * 256 + data[4]) / 65535.0
+    #bus.write_i2c_block_data(0x44, 0x2C, [0x06])
+    #data = bus.read_i2c_block_data(0x44, 0x00, 6)
+    #sTemp = ((((data[0] * 256.0) + data[1]) * 175) / 65535.0) - 45
+    #sHumid = 100 * (data[3] * 256 + data[4]) / 65535.0
     #curent time
     now = datetime.now() # current time in UTC
     if now >= by24hours : # less than 24 hours after watering
@@ -87,7 +87,7 @@ def state000():
         water = 0 # enable  watering
         
     print("Air Temp={0:0.1f}*C  Air Humidity={1:0.1f}%".format(temp, humidity))
-    print("Soil Temp={0:0.1f}*C  soil Humidity={1:0.1f}%".format(sTemp, sHumid))
+    #print("Soil Temp={0:0.1f}*C  soil Humidity={1:0.1f}%".format(sTemp, sHumid))
     print ("Luminosity:",lux)
     print ("current time:",now)
     print ("next watering time",by24hours)
@@ -144,8 +144,9 @@ def state000():
     print ("state:",current)
     print ("read:",readcount)
     if readcount == 3:
-        data = {"temp": temp, "humidity": humidity,"lux":lux}
-        firebase.post('/sensor/fsm', data)
+        firebase.put("/sensor/", "temp", format(temp,".1f"))
+        firebase.put("/sensor/", "humd", format(humidity,".1f"))
+        firebase.put("/sensor/", "lux", format(lux,".1f"))
         readcount = 0
         print ("upload success!")
 
