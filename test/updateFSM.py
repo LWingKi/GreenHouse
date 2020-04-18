@@ -12,14 +12,12 @@ from datetime import datetime, timedelta, timezone
 
 #database setting
 readcount = 0
-firebase = firebase.FirebaseApplication('https://fyptrial-c5456.firebaseio.com/', None)
+firebase = firebase.FirebaseApplication(
+    'https://fyptrial-c5456.firebaseio.com/', None)
 
 #lighe sensor I2C
 bus = smbus.SMBus(1)
 #lightAddr = 0x23
-
-
-
 
 #AM2320 sensor setting
 i2c = busio.I2C(board.SCL, board.SDA)
@@ -56,15 +54,23 @@ class GreenHouseState:
     water_FANOFF_LED100 = 15
     water_FANOFF_LED50 = 16
 
-    
     ALL_OFF = 17
-    
+    MANUAL = 18
+
 current = GreenHouseState.READ
 
+class App:
+    mode = 0 #default0=Auto 1=Manual
+    star_time = 0
+    end_time = 0
+    temp_input = 20 #user desire environment temp
+    fan_input = 5
+    led_input = 1   
 
 def state000():
     global current
     global by24hours
+    
     print ("reading...")
     #Air temp a humid
     humidity = am.relative_humidity
@@ -81,66 +87,87 @@ def state000():
     now = datetime.now() # current time in UTC
     if now >= by24hours : # less than 24 hours after watering
         water = 1 # disable  watering
-        by24hours = now + timedelta(hours=24) # new day to water
-        
+        by24hours = now + timedelta(hours=24) # new day to water  
     else: #alread 24 hr or more
         water = 0 # enable  watering
-        
+    
     print("Air Temp={0:0.1f}*C  Air Humidity={1:0.1f}%".format(temp, humidity))
     #print("Soil Temp={0:0.1f}*C  soil Humidity={1:0.1f}%".format(sTemp, sHumid))
     print ("Luminosity:",lux)
     print ("current time:",now)
     print ("next watering time",by24hours)
+    
+    App.temp_input = firebase.get('/control', 'temp')
+    temp_max = App.temp_input + 2 
+    temp_min = App.temp_input - 2 
+    print ("temp_max:",temp_max)
+    print ("temp_min:",temp_min)
+
+    App.mode = firebase.get('/control', 'mode')
+    if App.mode == 0:
+        print("Operation mode: AUTO")     
+    
     global readcount
     readcount= readcount +1
-    if water == 0 and temp > 27  and lux <40:#1
+    
+    if App.mode == 1: #Manual mode, #18
+        print("Operation mode: MANUAL")
+        App.led = firebase.get('/control', 'led')
+        App.fan = firebase.get('/control', 'fan')
+        App.start_time = now
+        App.end_time = now + timedelta(seconds=60) #move clock by 1 min
+        firebase.put("/control/", "mode", 0)
+        current = GreenHouseState.MANUAL
+    elif water == 0 and temp > temp_max  and lux <40:#1
         current = GreenHouseState.FAN100_LED100 
-    elif water == 0 and temp > 27 and (lux >= 40 and lux < 100): #2
+    elif water == 0 and temp > temp_max and (lux >= 40 and lux < 100): #2
         current = GreenHouseState.FAN100_LED50
-    elif water == 0 and temp > 27 and lux > 100: #3
+    elif water == 0 and temp > temp_max and lux > 100: #3
         current = GreenHouseState.FAN100_LEDOFF 
-    elif water == 0 and (temp >22 and temp <=27) and lux < 40: #4
+    elif water == 0 and (temp >temp_min and temp <=temp_max) and lux < 40: #4
         current = GreenHouseState.FAN50_LED100
-    elif water == 0 and (temp >22 and temp <=27) and (lux >= 40 and lux < 100):#5
+    elif water == 0 and (temp >temp_min and temp <=temp_max) and (lux >= 40 and lux < 100):#5
         current = GreenHouseState.FAN50_LED50
-    elif water == 0 and (temp >22 and temp <=27) and lux >100:#6
+    elif water == 0 and (temp >temp_min and temp <=temp_max) and lux >100:#6
         current = GreenHouseState.FAN50_LEDOFF
-    elif water == 0 and temp <=22 and lux < 40: #7
+    elif water == 0 and temp <=temp_min and lux < 40: #7
         current = GreenHouseState.FANOFF_LED100
-    elif water == 0 and temp <=22and (lux >= 40 and lux < 100):#8
+    elif water == 0 and temp <=temp_min and (lux >= 40 and lux < 100):#8
         current = GreenHouseState.FANOFF_LED50
-    elif water == 0 and temp <=22 and lux >100:#17
+    elif water == 0 and temp <=temp_min and lux >100:#17
         current = GreenHouseState.ALL_OFF
-    elif water == 1 and temp > 27  and lux <40:# 9
+    elif water == 1 and temp > temp_max  and lux <40:# 9
         current = GreenHouseState.water_FAN100_LED100
         water = 0
-    elif water == 1 and temp > 27 and (lux >= 40 and lux < 100): #10
+    elif water == 1 and temp > temp_max and (lux >= 40 and lux < 100): #10
         current = GreenHouseState.water_FAN100_LED50
         water = 0
-    elif water == 1 and temp > 27 and lux > 100: #11
+    elif water == 1 and temp > temp_max and lux > 100: #11
         current = GreenHouseState.water_FAN100_LEDOFF
         water = 0
-    elif water == 1 and (temp >22 and temp <=27) and lux < 40: #12
+    elif water == 1 and (temp >temp_min and temp <=temp_max) and lux < 40: #12
         current = GreenHouseState.water_FAN50_LED100
         water = 0
-    elif water == 1 and (temp >22 and temp <=27) and (lux >= 40 and lux < 100):#13
+    elif water == 1 and (temp >temp_min and temp <=temp_max) and (lux >= 40 and lux < 100):#13
         current = GreenHouseState.water_FAN50_LED50
         water = 0
-    elif water == 1 and (temp >22 and temp <=27) and lux >100:#14
+    elif water == 1 and (temp >temp_min and temp <=temp_max) and lux >100:#14
         current = GreenHouseState.water_FAN50_LEDOFF
         water = 0
-    elif water == 1 and temp <=22 and lux < 40: #15
+    elif water == 1 and temp <=temp_min and lux < 40: #15
         current = GreenHouseState.water_FANOFF_LED100
         water = 0
-    elif water == 1 and temp <=22and (lux >= 40 and lux < 100):#16
+    elif water == 1 and temp <=temp_min and (lux >= 40 and lux < 100):#16
         current = GreenHouseState.water_FANOFF_LED50
         water = 0
-    elif water == 1 and temp <=22 and lux >100:#17
+    elif water == 1 and temp <=temp_min and lux >100:#17
         current = GreenHouseState.ALL_OFF
         water = 0
     else: #17
         current = GreenHouseState.ALL_OFF
     time.sleep(1)
+    
+    
     print ("state:",current)
     print ("read:",readcount)
     if readcount == 3:
@@ -301,6 +328,20 @@ def state886():
     pwm.update()
     current = GreenHouseState.READ
     
+def state404(): #Manual state
+    global current
+    print ("404")
+    pwm.set_pulse_start_and_length_in_fraction(12, 0, 0)#fan
+    pwm.set_pulse_start_and_length_in_fraction(16, 0, 0)#pump
+    pwm.set_pulse_start_and_length_in_fraction(20, 0, 0)#led
+    pwm.update()
+
+    #loop Maunal state before end time
+    if datetime.now() >= App.end_time: 
+        current = GreenHouseState.READ #back to read sensor
+    else:
+        current = GreenHouseState.MANUAL
+    
 while True:
     if(current == GreenHouseState.READ):
         state000()
@@ -354,8 +395,11 @@ while True:
     elif(current == GreenHouseState.water_FANOFF_LED50):
         state016()
         time.sleep(30)
-    elif(current == GreenHouseState.FANOFF_LEDOFF):
+    elif(current == GreenHouseState.ALL_OFF):
         state886()
+        time.sleep(10)
+    elif(current == GreenHouseState.MANUAL):
+        state404()
         time.sleep(10)
     else:
         state000()
