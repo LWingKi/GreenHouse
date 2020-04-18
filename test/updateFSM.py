@@ -12,8 +12,7 @@ from datetime import datetime, timedelta, timezone
 
 #database setting
 readcount = 0
-firebase = firebase.FirebaseApplication(
-    'https://fyptrial-c5456.firebaseio.com/', None)
+firebase = firebase.FirebaseApplication('https://fyptrial-c5456.firebaseio.com/', None)
 
 #lighe sensor I2C
 bus = smbus.SMBus(1)
@@ -63,9 +62,9 @@ class App:
     mode = 0 #default0=Auto 1=Manual
     star_time = 0
     end_time = 0
-    temp_input = 20 #user desire environment temp
-    fan_input = 5
-    led_input = 1   
+    temp_input = 25 #user desire environment temp
+    fan_input = 0
+    led_input = 0   
 
 def state000():
     global current
@@ -112,8 +111,8 @@ def state000():
     
     if App.mode == 1: #Manual mode, #18
         print("Operation mode: MANUAL")
-        App.led = firebase.get('/control', 'led')
-        App.fan = firebase.get('/control', 'fan')
+        App.fan_input = firebase.get('/control', 'fan') * 2 / 10
+        App.led_input = firebase.get('/control', 'led') * 2 / 10
         App.start_time = now
         App.end_time = now + timedelta(seconds=60) #move clock by 1 min
         firebase.put("/control/", "mode", 0)
@@ -331,9 +330,9 @@ def state886():
 def state404(): #Manual state
     global current
     print ("404")
-    pwm.set_pulse_start_and_length_in_fraction(12, 0, 0)#fan
+    pwm.set_pulse_start_and_length_in_fraction(12, 0, App.fan_input)#fan
     pwm.set_pulse_start_and_length_in_fraction(16, 0, 0)#pump
-    pwm.set_pulse_start_and_length_in_fraction(20, 0, 0)#led
+    pwm.set_pulse_start_and_length_in_fraction(20, 0, App.led_input)#led
     pwm.update()
 
     #loop Maunal state before end time
