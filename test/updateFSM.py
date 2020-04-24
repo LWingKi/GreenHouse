@@ -172,6 +172,7 @@ def state000():
     if readcount == 3:
         firebase.put("/sensor/", "temp", format(temp,".1f"))
         firebase.put("/sensor/", "humd", format(humidity,".1f"))
+        firebase.put("/sensor/", "moisture", format(sHumid,".1f"))
         firebase.put("/sensor/", "lux", format(lux,".1f"))
         readcount = 0
         print ("upload success!")
