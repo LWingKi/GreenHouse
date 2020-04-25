@@ -84,9 +84,9 @@ def state000():
     sHumid = 100 * (data[3] * 256 + data[4]) / 65535.0
     #curent time
     now = datetime.now() # current time in UTC
-    if now >= by24hours : # more than 24 hours after watering
+    if now >= by24hours and sHumid <= 75 : # more than 24 hours after watering
         water = 1 # enable  watering flag
-        by24hours = now + timedelta(hours=24) # new day to water  
+        by24hours = now + timedelta(hours=24) # new day to water
     else: #not yet 24 hrs
         water = 0 # disable watering flag
     
