@@ -1,8 +1,7 @@
 import time
 import datetime
-water
- 
-print ("reading..."	)
+
+print ("reading...")
 humidity = 73.22
 temp = 24.6
 lux = 163
@@ -24,7 +23,7 @@ print ("read: 1")
 now = datetime.now() 
 
 time.sleep(10)
-print ("reading..."	)
+print ("reading...")
 humidity = 72.4
 temp = 25.7
 lux = 177
@@ -63,6 +62,6 @@ print ("temp_min:",23)
 print("Operation mode: AUTO")    
 print ("state: 6")
 print ("read: 3")
-print ("read: 006)
+print ("read: 006")
 print ("upload success!")
 
