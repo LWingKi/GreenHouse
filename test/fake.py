@@ -3,7 +3,7 @@ import datetime
 water
  
 print ("reading..."	)
-humidity = 73.22%
+humidity = 73.22
 temp = 24.6
 lux = 163
 sHumid = 85
@@ -25,7 +25,7 @@ now = datetime.now()
 
 time.sleep(10)
 print ("reading..."	)
-humidity = 72.4%
+humidity = 72.4
 temp = 25.7
 lux = 177
 sHumid = 79
@@ -47,7 +47,7 @@ time.sleep(64)
 
 time.sleep(10)
 print ("reading..."	)
-humidity = 70.9%
+humidity = 70.9
 temp = 24.46
 lux = 175
 sHumid = 86
