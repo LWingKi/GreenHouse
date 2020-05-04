@@ -91,7 +91,7 @@ def state000():
         water = 0 # disable watering flag
     
     print("Air Temp={0:0.1f}*C  Air Humidity={1:0.1f}%".format(temp, humidity))
-    print("soil moisture={1:0.1f}%".format(sHumid))
+    print("soil moisture={0:0.1f}%".format(sHumid))
     print ("Luminosity:",lux)
     print ("current time:",now)
     print ("next watering time",by24hours)
@@ -174,6 +174,7 @@ def state000():
         firebase.put("/sensor/", "humd", format(humidity,".1f"))
         firebase.put("/sensor/", "moisture", format(sHumid,".1f"))
         firebase.put("/sensor/", "lux", format(lux,".1f"))
+        firebase.put("/sensor/", "State", current)
         readcount = 0
         print ("upload success!")
 
